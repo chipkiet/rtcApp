@@ -18,11 +18,14 @@ const io = new Server(server, {
 });
 
 //middleware
-app.use(cors());
+app.use(cors()); 
 app.use(express.json());
 
 //noi luu tru use va messages, ve sau co the thay the bang database
-const users = {};
+const users = {};    // socket : {username, userType, status}
+const chatRooms = {} // roomId : {participants [], messages []}
+const userRooms = {}; // {userId}
+
 const chatMessages = [];
 
 //ket noi socket.io

@@ -1,12 +1,15 @@
 {
     "name": "chat-app",
     "scripts": {
-      "dev": "concurrently \"npm run server\" \"npm run client\"",
-      "server": "cd backend && npm start",
-      "client": "cd frontend && npm run dev"
+        "dev": "concurrently \"npm run server\" \"npm run client\"",
+        "server": "cd backend && npm start",
+        "client": "cd frontend && npm run dev"
     },
-
-  "devDependencies": {
-    "concurrently": "^9.1.2"
-  }
+    "devDependencies": {
+        "concurrently": "^9.1.2"
+    },
+    "dependencies": {
+        "dotenv": "^16.5.0",
+        "pg": "^8.16.0"
+    }
 }

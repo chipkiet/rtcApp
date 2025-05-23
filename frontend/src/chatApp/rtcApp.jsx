@@ -13,6 +13,11 @@ const ChatApp = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [typingUser, setTypingUser] = useState('');
   const [typingTimeout, setTypingTimeout] = useState(null);
+  const [userType, setUserType] = useState(''); // customer or seller
+  const [chatPartner, setChatPartner] = useState('');
+  const [availablePartner, setAvailablePartner] = useState([]);
+  const [currentChatRoom, setCurrenChatRoom] = useState('');
+  const [chatRequests, setChatRequests] =useState([]);
   const messageEndRef = useRef(null);
 
   // Cuộn xuống tin nhắn mới nhất
@@ -48,6 +53,10 @@ const ChatApp = () => {
         setIsTyping(false);
         setTypingUser('');
     });
+
+
+    // danh sach cac doi tac (partner) co the chat
+    socket.on('')
 
     // nhan thong bao khi co nguoi ngat ket noi (roi di)
     socket.on('user_left', (data) => {
@@ -151,7 +160,7 @@ const ChatApp = () => {
         className="flex-1 overflow-y-auto bg-cover bg-center p-4"
         style={{ backgroundImage: `url(${Image})` }}
         >
-         
+        
         {messages.map(message => (
           <div 
             key={message.id} 
