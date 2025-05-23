@@ -1,0 +1,20 @@
+{
+  "name": "chat-app-server",
+  "version": "1.0.0",
+  "description": "Server cho ứng dụng chat realtime",
+  "main": "server.js",
+  "type" : "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+    "dependencies": {
+      "cors": "^2.8.5",
+      "express": "^4.17.1",
+      "socket.io": "^4.8.1"
+    },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+
+}
