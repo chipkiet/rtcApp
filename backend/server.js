@@ -2,10 +2,31 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import pkg from 'pg';
+import dotenv from 'dotenv';
 
+dotenv.config();
+
+const {Pool} = pkg;
 const app = express();
 const server = createServer(app);
 
+const pool = new Pool({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+});
+
+pool.connect((err, client, release) => {
+    if(err) {
+        console.error('Error connecting to database: ', err);
+    }else {
+        console.log('Connected to PostgreSql database');
+        release();
+    }
+})
 
 // thiet lap cors cho socket.io
 
@@ -22,11 +43,90 @@ app.use(cors());
 app.use(express.json());
 
 //noi luu tru use va messages, ve sau co the thay the bang database
-const users = {};    // socket : {username, userType, status}
-const chatRooms = {} // roomId : {participants [], messages []}
-const userRooms = {}; // {userId}
+const activeUsers = {};    // socket : {username, userType, status}
+const userSockets = {};    // userId: socketId
 
-const chatMessages = [];
+const dbHelpers = {
+
+    //tao hoac lay user
+    async createOrGetUser(username, userType, email = null) {
+        try {
+
+            // kiem tra thu xem user da ton tai hay chua ? 
+              let result = await pool.query(
+                    `SELECT * from users where username = $1`,
+                    [username]
+              );
+
+              if(result.rows.length > 0) {
+                //update  online status 
+                await pool.query(
+                    `update users set is_online = true, last_seen = current_timestamp where id = $1`,
+                    [result.rows[0].id]
+                );
+                return result.rows[0];
+              }
+
+              //tao user moi neu chua co 
+              result = await pool.query(
+                    `insert into users (username, user_type, email, is_online) values ($1, $2, $3, true) returning *`,
+                    [username, userType, email]
+              );
+            return result.rows[0];
+        } catch (error) {
+            console.log('Error creating/getting user : ', error);
+            throw error;
+        }
+    },
+
+    // tao hoac lay chatroom giua customer va seller
+    async createOrGetChatroom(customerId, sellerId) {
+        try {
+            //kiem tra xem phong da ton tai hay chua ? 
+            let result = await pool.query(
+                `Select * from chat_rooms where customer_id = $1 and seller_id = $2 and status = $3`,
+                [customerId, sellerId, 'active']
+            );
+            return result.rows[0];
+        }catch(error) {
+            console.log('Error creating/getting chat room: ', error);
+            throw error;
+        }
+    },
+
+    //lay lich su doan chat
+    async getChatHistory(roomId) {
+        try {
+            const result= await pool.query(
+                `select m.*, u.username as sender_name
+                 from messages m
+                 join users u on m.sender_id = u.id
+                 where m.room_id = $1
+                 order by m.created_at asc
+                 limit 50
+                `
+            , [roomId]);
+            return result.rows;
+        }catch (error) {
+            console.error("Error getting chat history: ", error);
+            throw error;
+        }
+    }, 
+
+    //luu tin nhan doan chat
+    async saveMessage(roomId, senderId, messageText, messageType = 'text') {
+        try{ 
+            const result = await pool.query(
+                'insert into messages (room_id, sender_id, message_text, message_type) values ($1, $2, $3, $4) returning *',
+                [roomId, senderId, messageText, messageType]
+            );
+            return result.rows[0];
+        }catch(error) {
+            console.log('Error saving message : ', error);
+            throw error;
+        }
+    }
+}
 
 //ket noi socket.io
 io.on('connection', (socket) => {
