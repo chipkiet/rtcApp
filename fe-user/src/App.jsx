@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
-import io from "socket.io-client";
 import LoginForm from "./components/LoginForm";
 import ChatInterface from "./components/ChatScreen";
-
-const socket = io("http://localhost:5000", {
-  autoConnect: true,
-  transports: ["websocket"]
-});
+import socket from "../../fe-admin/src/socket/socket";
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -18,7 +13,8 @@ const App = () => {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [chatRooms, setChatRooms] = useState([]);
 
-  // Socket event handlers
+  // socket ev
+  // ent handlers
   useEffect(() => {
     const handleConnect = () => {
       console.log('Connected to server');
@@ -104,7 +100,7 @@ const App = () => {
     socket.connect(); // Reconnect for next login
   };
 
-  // Send message handler
+  
   const handleSendMessage = (messageContent) => {
     // TODO: Implement message sending to server
     console.log('Sending message:', messageContent);

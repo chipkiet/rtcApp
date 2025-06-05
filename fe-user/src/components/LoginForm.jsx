@@ -10,7 +10,7 @@ const LoginForm = ({
   const [loginForm, setLoginForm] = useState({
     username: '',
     email: '',
-    userType: 'user'
+    userType: 'user' // Fixed to user only
   });
 
   const handleSubmit = (e) => {
@@ -19,7 +19,7 @@ const LoginForm = ({
       onLogin({
         username: loginForm.username.trim(),
         email: loginForm.email.trim(),
-        user_type: loginForm.userType
+        user_type: 'user' // Always user
       });
     }
   };
@@ -51,11 +51,16 @@ const LoginForm = ({
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-50 to-indigo-50">
       <div className="w-full max-w-md p-8 bg-white shadow-xl rounded-2xl">
         <div className="mb-6 text-center">
-          <h2 className="mb-2 text-3xl font-bold text-gray-800">REAL TIME CHAT APP</h2>
-          <p className="text-gray-600">Realtime Chat Application</p>
+          <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full">
+            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a3 3 0 01-3-3V4a3 3 0 013-3h4a3 3 0 013 3v4z" />
+            </svg>
+          </div>
+          <h2 className="mb-2 text-2xl font-bold text-gray-800">Người dùng</h2>
+          <p className="text-gray-600">Tham gia chat cùng mọi người</p>
         </div>
 
         <div className="flex justify-center mb-4">
@@ -80,7 +85,7 @@ const LoginForm = ({
           <div>
             <input
               type="email"
-              placeholder="Email người dùng"
+              placeholder="Email người dưng"
               value={loginForm.email}
               onChange={(e) => setLoginForm(prev => ({...prev, email: e.target.value}))}
               className="w-full px-4 py-3 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:shadow-sm"
@@ -89,42 +94,35 @@ const LoginForm = ({
             />
           </div>
 
-          <div>
-            <label className="block mb-3 text-sm font-medium text-gray-700">Loại tài khoản:</label>
-            <div className="flex gap-4">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  value="user"
-                  checked={loginForm.userType === 'user'}
-                  onChange={(e) => setLoginForm(prev => ({...prev, userType: e.target.value}))}
-                  className="mr-2 text-blue-500"
-                  disabled={isLoading}
-                />
-                <span className="select-none">Người dùng</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  value="admin"
-                  checked={loginForm.userType === 'admin'}
-                  onChange={(e) => setLoginForm(prev => ({...prev, userType: e.target.value}))}
-                  className="mr-2 text-blue-500"
-                  disabled={isLoading}
-                />
-                <span className="select-none">Admin</span>
-              </label>
+          {/* User type is hidden and fixed to 'user' */}
+          <div className="p-3 border border-blue-200 rounded-lg bg-blue-50">
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-6 h-6 mr-3 bg-blue-600 rounded-full">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-blue-800">Đăng nhập với tư cách người dùng</span>
             </div>
           </div>
 
           <button 
             type="submit"
-            className="w-full py-3 font-medium text-white transition-all rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 font-medium text-white transition-all rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading || connectionStatus !== 'connected'}
           >
-            {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            {isLoading ? 'Đang đăng nhập...' : 'Tham gia Chat'}
           </button>
         </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-500">
+            Bạn là quản trị viên? 
+            <a href="/admin" className="ml-1 text-blue-600 hover:text-blue-800">
+              Đăng nhập Admin
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );

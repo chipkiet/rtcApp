@@ -5,16 +5,13 @@ async function testDatabaseConnection() {
     console.log('🔄 Testing database connection...');
     
     try {
-        // Test basic connection
         const client = await pool.connect();
         console.log('✅ Database connected successfully!');
         
-        // Test basic query
         const result = await client.query('SELECT NOW() as current_time, version() as postgres_version');
         console.log('📅 Current time:', result.rows[0].current_time);
         console.log('🐘 PostgreSQL version:', result.rows[0].postgres_version);
         
-        // Test if tables exist
         const tablesQuery = `
             SELECT table_name 
             FROM information_schema.tables 

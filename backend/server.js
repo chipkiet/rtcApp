@@ -9,7 +9,6 @@ import * as userModel from './models/User.js';
 import * as chatRoomModel from './models/chatRoom.js';
 import * as messageModel from './models/Message.js';
 import { Socket } from 'dgram';
-import socket from '../frontend/src/socket/socket.js';
 
 dotenv.config();
 
@@ -17,12 +16,21 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173",
+        origin:[ 
+            "http://localhost:5173",
+            "http://localhost:5174"
+        ],
+
         methods: ["GET", "POST"]
     }
 });
 
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "http://localhost:5174"
+    ]
+}));
 app.use(express.json());
 
 const onlineUsers = new Map(); // userId -> {socketId, userData}
