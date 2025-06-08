@@ -10,11 +10,11 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  const [currentRoom, setCurrentRoom] = useState(null); // Thêm currentRoom
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [chatRooms, setChatRooms] = useState([]);
 
-  // socket ev
-  // ent handlers
+  // Socket event handlers
   useEffect(() => {
     const handleConnect = () => {
       console.log('Connected to server');
@@ -28,14 +28,21 @@ const App = () => {
       setError('Mất kết nối với server');
       setIsLoggedIn(false);
       setCurrentUser(null);
+      setCurrentRoom(null);
     };
 
     const handleUserAuthenticated = (userData) => {
       console.log('User authenticated:', userData);
-      setCurrentUser(userData);
+      setCurrentUser(userData.user);
+      setCurrentRoom(userData.room); // Lưu thông tin room
       setIsLoggedIn(true);
       setIsLoading(false);
       setError('');
+      
+      // Load tin nhắn cũ của room (nếu có)
+      if (userData.room) {
+        console.log('User joined room:', userData.room);
+      }
     };
 
     const handleAuthenticationError = (error) => {
@@ -54,10 +61,35 @@ const App = () => {
       setChatRooms(rooms);
     };
 
-    // Add message handlers here when implementing
+    // FIXED: Xử lý tin nhắn mới
     const handleNewMessage = (message) => {
       console.log('New message received:', message);
-      setMessages(prev => [...prev, message]);
+      console.log('Current room ID:', currentRoom?.id);
+      console.log('Message room ID:', message.room_id);
+      
+      // Chỉ thêm tin nhắn nếu nó thuộc về room hiện tại
+      if (currentRoom && message.room_id === currentRoom.id) {
+        setMessages(prev => {
+          // Tránh duplicate messages
+          const exists = prev.some(msg => msg.id === message.id);
+          if (exists) return prev;
+          
+          return [...prev, message];
+        });
+      }
+    };
+
+    // Xử lý khi admin join room (để load tin nhắn cũ)
+    const handleRoomJoined = (data) => {
+      console.log('Room data received:', data);
+      if (data.messages) {
+        setMessages(data.messages);
+      }
+    };
+
+    const handleError = (error) => {
+      console.error('Socket error:', error);
+      setError(error.message || 'Có lỗi xảy ra');
     };
 
     // Đăng ký lắng nghe sự kiện
@@ -67,7 +99,9 @@ const App = () => {
     socket.on('authentication_error', handleAuthenticationError);
     socket.on('online_users_update', handleOnlineUserUpdate);
     socket.on('chat_rooms_update', handleChatRoomsUpdate);
-    socket.on('new_message', handleNewMessage); // For future message handling
+    socket.on('new_message', handleNewMessage);
+    socket.on('room_joined', handleRoomJoined);
+    socket.on('error', handleError);
 
     // Dọn sạch sự kiện 
     return () => {
@@ -78,8 +112,10 @@ const App = () => {
       socket.off('online_users_update', handleOnlineUserUpdate);
       socket.off('chat_rooms_update', handleChatRoomsUpdate);
       socket.off('new_message', handleNewMessage);
+      socket.off('room_joined', handleRoomJoined);
+      socket.off('error', handleError);
     };
-  }, []);
+  }, [currentRoom]); // Thêm currentRoom vào dependency
 
   // Login handler
   const handleLogin = (loginData) => {
@@ -90,9 +126,15 @@ const App = () => {
 
   // Logout handler
   const handleLogout = () => {
+    // Leave room trước khi logout
+    if (currentRoom) {
+      socket.emit('user_leave_room', { roomId: currentRoom.id });
+    }
+    
     socket.disconnect();
     setIsLoggedIn(false);
     setCurrentUser(null);
+    setCurrentRoom(null);
     setOnlineUsers([]);
     setChatRooms([]);
     setMessages([]);
@@ -100,19 +142,29 @@ const App = () => {
     socket.connect(); // Reconnect for next login
   };
 
-  
+  // FIXED: Sửa logic gửi tin nhắn
   const handleSendMessage = (messageContent) => {
-    // TODO: Implement message sending to server
-    console.log('Sending message:', messageContent);
-    // socket.emit('send_message', { content: messageContent, room: 'general' });
-    
-    // Temporary: Add message to local state for testing
-    const newMessage = {
-      sender: currentUser?.username,
+    if (!currentRoom) {
+      alert("Chưa có phòng chat để gửi tin nhắn");
+      return;
+    }
+
+    if (!messageContent.trim()) {
+      alert("Tin nhắn không được để trống");
+      return;
+    }
+
+    console.log('Sending message:', {
       content: messageContent,
-      timestamp: new Date().toLocaleTimeString()
-    };
-    setMessages(prev => [...prev, newMessage]);
+      roomId: currentRoom.id,
+      currentRoom: currentRoom
+    });
+
+    // Gửi tin nhắn với roomId đúng
+    socket.emit('send_message', {
+      content: messageContent.trim(),
+      roomId: currentRoom.id
+    });
   };
 
   // Clear error handler
@@ -136,6 +188,7 @@ const App = () => {
   return (
     <ChatInterface
       currentUser={currentUser}
+      currentRoom={currentRoom}
       onlineUsers={onlineUsers}
       chatRooms={chatRooms}
       messages={messages}
