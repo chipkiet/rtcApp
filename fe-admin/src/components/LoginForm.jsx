@@ -94,7 +94,6 @@ const LoginForm = ({
             />
           </div>
 
-          {/* Admin type is shown and fixed */}
           <div className="p-3 border border-purple-200 rounded-lg bg-purple-50">
             <div className="flex items-center">
               <div className="flex items-center justify-center w-6 h-6 mr-3 bg-purple-600 rounded-full">
